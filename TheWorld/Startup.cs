@@ -58,7 +58,7 @@ namespace TheWorld
 
             services.AddMvc()
                 .AddJsonOptions(config =>
-                    config.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
+                    config.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver()
                 );
         }
 
@@ -69,8 +69,10 @@ namespace TheWorld
             ILoggerFactory factory)
         {
             Mapper.Initialize(config =>
-                config.CreateMap<TripViewModel, Trip>().ReverseMap()
-            );
+            {
+                config.CreateMap<TripViewModel, Trip>().ReverseMap();
+                config.CreateMap<StopViewModel, Stop>().ReverseMap();
+            });
 
             if(env.IsEnvironment("Development"))
             {
