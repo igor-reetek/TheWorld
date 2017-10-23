@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,18 +15,29 @@ namespace TheWorld.Controllers.Api
     public class TripsController : Controller
     {
         private IWorldRepository _repository;
+        private ILogger<TripsController> _logger;
 
-        public TripsController(IWorldRepository repository)
+        public TripsController(IWorldRepository repository, ILogger<TripsController> logger)
         {
             _repository = repository;
+            _logger = logger;
         }
 
         [HttpGet("")]
         public IActionResult Get()
         {
-            var trips = _repository.GetAllTrips();
+            try
+            {
+                var results = _repository.GetAllTrips();
 
-            return Ok(trips);
+                return Ok(Mapper.Map<IEnumerable<TripViewModel>>(results));
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError($"Failed to get all trips: {ex}");
+
+                return BadRequest("Error Occured");
+            }
         }
 
         [HttpPost("")]
@@ -32,7 +45,9 @@ namespace TheWorld.Controllers.Api
         {
             if (ModelState.IsValid)
             {
-                return Created($"api/trips/{trip.Name}", trip);
+                var newTrip = Mapper.Map<Trip>(trip);
+
+                return Created($"api/trips/{trip.Name}", Mapper.Map<TripViewModel>(newTrip));
             }
 
             return BadRequest(ModelState);
