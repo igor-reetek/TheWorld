@@ -17,11 +17,21 @@ namespace TheWorld.Models
             _logger = logger;
         }
 
+        public void AddTrip(Trip trip)
+        {
+            _context.Trips.Add(trip);
+        }
+
         public IEnumerable<Trip> GetAllTrips()
         {
             _logger.LogInformation("Getting all Trips from the Database");
 
             return _context.Trips.ToList();
+        }
+
+        public async Task<bool> SaveChangesAsync()
+        {
+            return (await _context.SaveChangesAsync()) > 0;
         }
     }
 }
