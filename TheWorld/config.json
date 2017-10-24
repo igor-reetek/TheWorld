@@ -6,6 +6,6 @@
     "WorldContextConnection": "Data Source=IGORSPC;Initial Catalog=TheWorldDb;Integrated Security=True"
   },
   "Keys": {
-    "BingKeys": "DONTEVERPUTKEYSINSOURCECONTROL"
+    "BingKey": "DONTEVERPUTKEYSINSOURCECONTROL"
   } 
 }
