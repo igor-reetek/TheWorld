@@ -14,6 +14,7 @@ using Newtonsoft.Json.Serialization;
 using AutoMapper;
 using TheWorld.ViewModels;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 
 namespace TheWorld
 {
@@ -41,10 +42,17 @@ namespace TheWorld
             services.AddSingleton(_config);
 
             // Add MVC services to the services container
-            services.AddMvc()
-                .AddJsonOptions(config =>
-                    config.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver()
-                );
+            services.AddMvc(config =>
+            {
+                if(_env.IsProduction())
+                {
+                    config.Filters.Add(new RequireHttpsAttribute());
+                }
+               
+            })
+            .AddJsonOptions(config =>
+                config.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver()
+            );
 
             // Add Identity services to the services container
             services.AddIdentity<WorldUser, IdentityRole>(config =>
@@ -75,7 +83,7 @@ namespace TheWorld
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, 
+        public void Configure(IApplicationBuilder app,
             IHostingEnvironment env,
             WorldContextSeedData seeder,
             ILoggerFactory factory)
