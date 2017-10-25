@@ -40,14 +40,10 @@ namespace TheWorld
         {
             services.AddSingleton(_config);
 
-            if(_env.IsEnvironment("Development") || _env.IsEnvironment("Testing"))
-            {
-                services.AddScoped<IMailService, DebugMailService>();
-            }
-            else
-            {
-                //Implement a real mail service
-            }
+            services.AddMvc()
+                .AddJsonOptions(config =>
+                    config.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver()
+                );
 
             services.AddIdentity<WorldUser, IdentityRole>(config =>
             {
@@ -58,20 +54,19 @@ namespace TheWorld
 
             services.ConfigureApplicationCookie(options => options.LoginPath = "/Auth/Login");
 
-            services.AddDbContext<WorldContext>();
-
-            services.AddScoped<IWorldRepository, WorldRepository>();
-
-            services.AddTransient<GeoCoordsService>();
-
-            services.AddTransient<WorldContextSeedData>();
-
             services.AddLogging();
 
-            services.AddMvc()
-                .AddJsonOptions(config =>
-                    config.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver()
-                );
+            services.AddDbContext<WorldContext>();
+
+            services.AddTransient<GeoCoordsService>();
+            services.AddTransient<WorldContextSeedData>();
+            services.AddScoped<IWorldRepository, WorldRepository>();
+
+#if DEBUG
+            services.AddScoped<IMailService, DebugMailService>();
+#else
+            //Implement a real mail service
+#endif
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -80,12 +75,6 @@ namespace TheWorld
             WorldContextSeedData seeder,
             ILoggerFactory factory)
         {
-            Mapper.Initialize(config =>
-            {
-                config.CreateMap<TripViewModel, Trip>().ReverseMap();
-                config.CreateMap<StopViewModel, Stop>().ReverseMap();
-            });
-
             if(env.IsEnvironment("Development"))
             {
                 app.UseDeveloperExceptionPage();
@@ -99,6 +88,12 @@ namespace TheWorld
             app.UseStaticFiles();
 
             app.UseAuthentication();
+
+            Mapper.Initialize(config =>
+            {
+                config.CreateMap<TripViewModel, Trip>().ReverseMap();
+                config.CreateMap<StopViewModel, Stop>().ReverseMap();
+            });
 
             app.UseMvc(config =>
             {
