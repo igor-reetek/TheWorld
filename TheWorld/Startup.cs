@@ -13,6 +13,7 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Serialization;
 using AutoMapper;
 using TheWorld.ViewModels;
+using Microsoft.AspNetCore.Identity;
 
 namespace TheWorld
 {
@@ -47,6 +48,15 @@ namespace TheWorld
             {
                 //Implement a real mail service
             }
+
+            services.AddIdentity<WorldUser, IdentityRole>(config =>
+            {
+                config.User.RequireUniqueEmail = true;
+                config.Password.RequiredLength = 8;
+            })
+            .AddEntityFrameworkStores<WorldContext>();
+
+            services.ConfigureApplicationCookie(options => options.LoginPath = "/Auth/Login");
 
             services.AddDbContext<WorldContext>();
 
@@ -87,6 +97,8 @@ namespace TheWorld
             }
 
             app.UseStaticFiles();
+
+            app.UseAuthentication();
 
             app.UseMvc(config =>
             {
