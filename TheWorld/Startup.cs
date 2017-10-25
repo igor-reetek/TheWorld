@@ -29,7 +29,7 @@ namespace TheWorld
             var builder = new ConfigurationBuilder()
                 .SetBasePath(_env.ContentRootPath)
                 .AddJsonFile("config.json")
-                .AddEnvironmentVariables();
+                .AddEnvironmentVariables(); //All environment variables in the process's context flow in as configuration values.
 
             _config = builder.Build();
         }
@@ -40,11 +40,13 @@ namespace TheWorld
         {
             services.AddSingleton(_config);
 
+            // Add MVC services to the services container
             services.AddMvc()
                 .AddJsonOptions(config =>
                     config.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver()
                 );
 
+            // Add Identity services to the services container
             services.AddIdentity<WorldUser, IdentityRole>(config =>
             {
                 config.User.RequireUniqueEmail = true;
@@ -54,10 +56,13 @@ namespace TheWorld
 
             services.ConfigureApplicationCookie(options => options.LoginPath = "/Auth/Login");
 
+            // Add logging services to the services container 
             services.AddLogging();
 
+            // Add EF services to the services container
             services.AddDbContext<WorldContext>();
 
+            // Add Non EF services to the services container
             services.AddTransient<GeoCoordsService>();
             services.AddTransient<WorldContextSeedData>();
             services.AddScoped<IWorldRepository, WorldRepository>();
@@ -77,6 +82,8 @@ namespace TheWorld
         {
             if(env.IsEnvironment("Development"))
             {
+                // Error page middleware displays a nice formatted HTML page for any unhandled exceptions in the request pipeline.
+                // Note: Not recommended for production.
                 app.UseDeveloperExceptionPage();
                 factory.AddDebug(LogLevel.Information);
             }
@@ -85,16 +92,20 @@ namespace TheWorld
                 factory.AddDebug(LogLevel.Error);
             }
 
+            // Add static files to the request pipeline
             app.UseStaticFiles();
 
+            // Add cookie-based authentication to the request pipeline
             app.UseAuthentication();
 
+            // Initialize AutoMapper
             Mapper.Initialize(config =>
             {
                 config.CreateMap<TripViewModel, Trip>().ReverseMap();
                 config.CreateMap<StopViewModel, Stop>().ReverseMap();
             });
 
+            // Add MVC to the request pipeline
             app.UseMvc(config =>
             {
                 config.MapRoute(
@@ -104,6 +115,7 @@ namespace TheWorld
                 );
             });
 
+            // Run Seed Data
             seeder.EsureSeedData().Wait();
         }
     }
