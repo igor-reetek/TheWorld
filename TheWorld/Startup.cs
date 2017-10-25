@@ -15,6 +15,7 @@ using AutoMapper;
 using TheWorld.ViewModels;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authentication.Cookies;
 
 namespace TheWorld
 {
@@ -62,7 +63,25 @@ namespace TheWorld
             })
             .AddEntityFrameworkStores<WorldContext>();
 
-            services.ConfigureApplicationCookie(options => options.LoginPath = "/Auth/Login");
+            services.ConfigureApplicationCookie(options => {
+                options.LoginPath = "/Auth/Login";
+                options.Events = new CookieAuthenticationEvents()
+                {
+                    OnRedirectToLogin = async ctx =>
+                    {
+                        if (ctx.Request.Path.StartsWithSegments("/api") &&
+                        ctx.Response.StatusCode == 200)
+                        {
+                            ctx.Response.StatusCode = 401;
+                        }
+                        else
+                        {
+                            ctx.Response.Redirect(ctx.RedirectUri);
+                        }
+                        await Task.Yield();
+                    }
+                };
+            });
 
             // Add logging services to the services container 
             services.AddLogging();
