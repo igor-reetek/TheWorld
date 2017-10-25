@@ -65,6 +65,10 @@ namespace TheWorld
 
             services.ConfigureApplicationCookie(options => {
                 options.LoginPath = "/Auth/Login";
+
+                // Tell api controllers to piggy back of the cookie authentication,
+                // which is not ideal in real world scenario should use OAuth2 and Open ID Connect (OIDC)
+                // and support non-JS clients better.
                 options.Events = new CookieAuthenticationEvents()
                 {
                     OnRedirectToLogin = async ctx =>
